@@ -11,14 +11,13 @@ function App() {
       <header className="bg-white shadow-sm p-6 mb-8">
         <h1 className="text-4xl font-bold text-center">State of Post-Quantum Security</h1>
         <p className="text-center text-gray-600 mt-2">
-          A live, vendor-neutral overview with a TLS self-check.
+          A compact, vendor-neutral overview. For tech leads and architects, that would like to grasp the advancements at a glance.
         </p>
       </header>
 
       <main className="container mx-auto px-4 max-w-7xl">
         <Countdown />
         <QuantumState />
-        <TLSChecker />
         <Explainer />
         <ManagementFAQ />
         

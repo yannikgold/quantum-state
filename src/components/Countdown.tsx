@@ -46,7 +46,8 @@ export const Countdown = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
       <div className="bg-white rounded-2xl shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">Countdown to Year 2 Quantum</h2>
+        <h2 className="text-2xl font-bold mb-1">Countdown to Year 2 Quantum</h2>
+        <p className="text-gray-400 text-sm mb-4">2030</p>
         <div className="grid grid-cols-4 gap-2 text-center">
           <div>
             <div className="text-3xl font-bold">{timeLeft.days}</div>

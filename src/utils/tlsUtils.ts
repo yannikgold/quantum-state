@@ -120,9 +120,17 @@ const API_ENDPOINTS = {
   // Certificate Transparency logs (CORS-enabled)
   CT_LOG: 'https://api.certspotter.com/v1/issuances',
   // Mozilla TLS Observatory (CORS-enabled)
-  MOZILLA: 'https://tls-observatory.services.mozilla.com/api/v1'
+  // MOZILLA: 'https://tls-observatory.services.mozilla.com/api/v1'
 };
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
+
+export const analyzeTLS = async (domain: string): Promise<TLSInfo> => {
+  const resp = await fetch(`${API_BASE}/tlsinfo?host=${domain}`);
+  return await resp.json();
+};
+
+/*
 export const analyzeTLS = async (domain: string): Promise<TLSInfo> => {
   try {
     console.group(`🔍 Analyzing TLS for ${domain}`);
@@ -135,34 +143,27 @@ export const analyzeTLS = async (domain: string): Promise<TLSInfo> => {
     const certData = await certResponse.json();
     console.log('Certificate data:', certData[0] || 'No data');
 
-    // 2. Try Mozilla Observatory
-    console.log('Fetching TLS Observatory data...');
-    const mozResponse = await fetch(`${API_ENDPOINTS.MOZILLA}/scan?target=${domain}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const scanId = await mozResponse.json();
-    console.log('Scan initiated:', scanId);
-
-    // Wait for scan results
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    const resultsResponse = await fetch(`${API_ENDPOINTS.MOZILLA}/results?id=${scanId.scan_id}`);
-    const tlsData = await resultsResponse.json();
+    // 2. Fetch SSL Labs data via JSONP
+    console.log('Fetching SSL Labs data...');
+    const proxyUrl = `https://quantum-proxy.yourname.workers.dev?host=${domain}`;
+    const resp = await fetch(proxyUrl);
+    const tlsData = await resp.json();
     console.log('TLS data:', tlsData);
 
     // Combine and analyze results
+    const endpointDetails = tlsData.endpoints?.[0]?.details || {};
     const cryptoAnalysis = {
-      keyExchange: tlsData.connection_info?.cipher?.kex || null,
-      signature: certData[0]?.cert?.signature_algorithm || null,
-      symmetric: tlsData.connection_info?.cipher?.name || null
+      keyExchange: endpointDetails.keyExchange || null,
+      signature: endpointDetails.cert?.sigAlg || null,
+      symmetric: endpointDetails.protocols?.[0]?.name || null
     };
     
     console.log('Crypto analysis:', cryptoAnalysis);
 
     const result: TLSInfo = {
       host: domain,
-      status: 'READY',
-      protocols: tlsData.connection_info?.protocols || [],
+      status: tlsData.status === 'READY' ? 'READY' : (tlsData.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'UNKNOWN'),
+      protocols: endpointDetails.protocols?.map((p: any) => p.name) || [],
       cipher: cryptoAnalysis.symmetric,
       certInfo: {
         subject: certData[0]?.dns_names?.[0] || domain,
@@ -170,10 +171,11 @@ export const analyzeTLS = async (domain: string): Promise<TLSInfo> => {
         validFrom: certData[0]?.cert?.not_before || null,
         validTo: certData[0]?.cert?.not_after || null,
         signatureAlgorithm: cryptoAnalysis.signature,
-        keySize: tlsData.connection_info?.cert?.key?.size || null
+        keySize: endpointDetails.cert?.key?.size || null
       },
       pqStatus: analyzePQStatus(cryptoAnalysis),
-      cryptography: analyzeCryptoDetails(cryptoAnalysis)
+      cryptography: analyzeCryptoDetails(cryptoAnalysis),
+      raw: tlsData
     };
 
     console.log('Final analysis:', result);
@@ -205,6 +207,7 @@ export const analyzeTLS = async (domain: string): Promise<TLSInfo> => {
     };
   }
 };
+*/
 
 // Improve analysis functions with logging
 const analyzePQStatus = (cryptoAnalysis: any): "green" | "yellow" | "red" => {
